@@ -28,19 +28,21 @@ def GetSearch():
       pageCount=1
       while True:
           cookies = {
-              'WMONID': 'z_doq3mn_kE',
-              'JSESSIONID': 'V4h2HM7FF0bFtAuYzUinrOXMLSBoHpsvg3z2GicxtQG2zf4Rvqi6whuRssSXCp6I.amV1c19kb21haW4va29zaGFjbXMx',
-              'kosha_visited': '20241210203049723001',
-              'org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE': 'ko',
-              'develop_preview_mode': 'N',
-          }
+          'WMONID': 'M3MLkwgq9cp',
+          'kosha_visited': '20241210230453596001',
+          'english_visited': '20241210230519893001',
+          'JSESSIONID': 'Cdal7zRZnh1MRAEkNXSqIiv1p9lARp4igqPp2H6LUU5npMxQvGMiXONSLZdhKIst.amV1c19kb21haW4va29zaGFjbXMy',
+          'org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE': 'ko',
+          'develop_preview_mode': 'N',
+        }
+
           headers = {
               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
               'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
               'Cache-Control': 'max-age=0',
               'Connection': 'keep-alive',
               'Content-Type': 'application/x-www-form-urlencoded',
-              # 'Cookie': 'WMONID=z_doq3mn_kE; JSESSIONID=V4h2HM7FF0bFtAuYzUinrOXMLSBoHpsvg3z2GicxtQG2zf4Rvqi6whuRssSXCp6I.amV1c19kb21haW4va29zaGFjbXMx; kosha_visited=20241210203049723001; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=ko; develop_preview_mode=N',
+              # 'Cookie': 'WMONID=M3MLkwgq9cp; kosha_visited=20241210230453596001; english_visited=20241210230519893001; JSESSIONID=Cdal7zRZnh1MRAEkNXSqIiv1p9lARp4igqPp2H6LUU5npMxQvGMiXONSLZdhKIst.amV1c19kb21haW4va29zaGFjbXMy; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=ko; develop_preview_mode=N',
               'Origin': 'https://www.kosha.or.kr',
               'Referer': 'https://www.kosha.or.kr/kosha/data/guidanceA.do',
               'Sec-Fetch-Dest': 'document',
