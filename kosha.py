@@ -62,6 +62,8 @@ def GetSearch():
           }
           response = requests.post('https://www.kosha.or.kr/kosha/data/guidance{}.do'.format(guide), cookies=cookies, headers=headers, data=data)
           soup=BeautifulSoup(response.text,'html.parser')
+          with open('kosha_search.html','w',encoding='utf-8') as file:
+            file.write(soup.prettify())
           table=soup.find('tbody')
           items=soup.find_all('tr')
           print("아이템수:",len(items))
