@@ -351,7 +351,7 @@ def insert_dummy_data(inputData):
   
 def job():
   #========게시글 가져오기        
-  # GetSearch()
+  GetSearch()
 
 
   # #==========상세정보 가져오기
