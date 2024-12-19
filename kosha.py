@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 import os
 import glob
 import schedule
+import psycopg2
+from psycopg2 import sql
 
 def createFolder(directory):
     try:
@@ -18,8 +20,6 @@ def createFolder(directory):
             os.makedirs(directory)
     except OSError:
         print('Error: Creating directory. ' + directory)
-
-
 def GetSearch():
     
     dataList=[]
@@ -143,7 +143,7 @@ def GetDetail(inputData,infobase):
   # Sanitize the itemTitle to remove invalid filename characters
   sanitized_title = re.sub(r'[<>:"/\\|?*]', '', inputData['itemTitle'])
   infobase['KOSHA-GUIDE'][0]['metadata']['FileName'] = (
-      inputData['itemNo'] + "_" + sanitized_title + "_" + inputData['pubDate'].replace("-", "") + ".json"
+      inputData['itemNo'] + "_" + sanitized_title + "_" + inputData['pubDate'].replace("-", "")
   )
   
   infobase['KOSHA-GUIDE'][0]['data']['id']=inputData['boardNo']
@@ -156,7 +156,7 @@ def GetDetail(inputData,infobase):
     contents=[]
   infobase['KOSHA-GUIDE'][0]['data']['content']['contents'] = [text for text in contents if text]
   infobase['KOSHA-GUIDE'][0]['data']['attachments']['fileName']=inputData['itemNo']+" "+inputData['itemTitle']+"_"+inputData['pubDate'].replace("-","")+".pdf"
-  infobase['KOSHA-GUIDE'][0]['data']['attachments']['fileUrl']="\\kosha-guide\\attachments\\{}".format(timeNowMonth)
+  infobase['KOSHA-GUIDE'][0]['data']['attachments']['fileUrl']="\\collection\\kosha-guide\\attachments\\{}".format(timeNowMonth)
   first_letter = inputData['itemNo'].split('-')[0][0]
   if first_letter in ['X', 'Z']:
       category = 'KOSHAGuideXZ'
@@ -264,7 +264,7 @@ def UploadImageToS3(inputData):
   aws_access_key_id=os.getenv('aws_access_key_id')
   aws_secret_access_key=os.getenv('aws_secret_access_key')
   region_name=os.getenv('region_name')
-  bucket_name='kosha-guide'
+  bucket_name='htc-ai-datalake'
 
   print('aws_access_key_id:',aws_access_key_id)
   print('aws_secret_access_key:',aws_secret_access_key)
@@ -284,7 +284,7 @@ def UploadImageToS3(inputData):
       response = s3_client.upload_file(
           Filename="result/{}".format(inputData['KOSHA-GUIDE'][0]['metadata']['FileName']),
           Bucket=bucket_name,
-          Key=f"{timeNow}/{inputData['KOSHA-GUIDE'][0]['metadata']['FileName']}"  # timeNow(예: 202412) 폴더 안에 파일 저장
+          Key=f"collection/kosha-guide/{timeNow}/{inputData['KOSHA-GUIDE'][0]['metadata']['FileName']}"  # timeNow(예: 202412) 폴더 안에 파일 저장
       )
       print("JSON파일 업로드 성공!")
   except Exception as e:
@@ -294,19 +294,64 @@ def UploadImageToS3(inputData):
       response = s3_client.upload_file(
           Filename="result/{}".format(inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileName']),
           Bucket=bucket_name,
-          Key=f"attachments/{timeNow}/{inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileName']}"  # timeNow(예: 202412) 폴더 안에 파일 저장
+          Key=f"collection/kosha-guide/attachments/{timeNow}/{inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileName']}"  # timeNow(예: 202412) 폴더 안에 파일 저장
       )
       print("PDF파일 업로드 성공!")
   except Exception as e:
       print("파일 업로드 실패:", str(e))
       return None          
   
-  
+def insert_dummy_data(inputData):
+  # 데이터베이스 연결 정보
+    initial_db_params = {
+        'dbname': 'postgres',
+        'user': 'postgres',
+        'password': 'ddiMaster1!',
+        'host': '127.0.0.1',
+        'port': '5432'
+    }
+    try:
+        # 데이터베이스에 연결
+        connection = psycopg2.connect(**initial_db_params)
+        cursor = connection.cursor()
+        
+        # 더미 데이터 삽입
+        insert_query = """
+            INSERT INTO collection_data (name, file_name, file_path, method, collection_id,reg_time)
+            VALUES (%s, %s, %s, %s, %s,%s)
+        """
+        # dummy_data = [
+        #     ('name1', 'file1', '/path/to/file1', 'AUTO', 78),
+        # ]
+        
+        datas=[]
+        timeNow=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timeNowMonth=datetime.datetime.now().strftime("%Y%m")
+        koreanTitle=inputData['KOSHA-GUIDE'][0]['data']['title']
+        attachmentFileName=inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileName']
+        attachmentFileUrl=inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileUrl'].lstrip('\\')
+        datas.append((koreanTitle,attachmentFileName, attachmentFileUrl, 'AUTO', "106",timeNow))
+        
+        for data in datas:
+            cursor.execute(insert_query, data)
+        
+        # 변경사항 커밋
+        connection.commit()
+        print("Dummy data inserted successfully.")
+    
+    except Exception as error:
+        print(f"Error: {error}")
+    
+    finally:
+        # 연결 닫기
+        if connection:
+            cursor.close()
+            connection.close()  
   
   
 def job():
   #========게시글 가져오기        
-  GetSearch()
+  # GetSearch()
 
 
   # #==========상세정보 가져오기
@@ -315,7 +360,7 @@ def job():
       "KOSHA-GUIDE": [
           {
               "metadata": {
-                  "Type": "KOSHA-GUIDE",
+                  "Type": "Kosha-guide",
                   "Source": "https://www.kosha.or.kr/kosha/data/guidanceA.do",
                   "Author": "산업안전보건공단",
                   "CreationDate": "",
@@ -361,6 +406,9 @@ def job():
       except Exception as e:
         print(f"파일 다운로드 실패: {str(e)}")
     UploadImageToS3(result)
+    with open('result.json','w',encoding='utf-8') as file:
+      json.dump(result,file,ensure_ascii=False,indent=4)
+    insert_dummy_data(result)
     # if index>=10:
     #   break
 
@@ -388,5 +436,5 @@ while True:
     schedule.run_pending()
     time.sleep(10)
 
-  
-
+load_dotenv()
+# PrintS3FileNames()
