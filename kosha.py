@@ -304,7 +304,7 @@ def UploadImageToS3(inputData):
 def insert_dummy_data(inputData):
   # 데이터베이스 연결 정보
     initial_db_params = {
-        'dbname': 'postgres',
+        'dbname': 'htc-aikr-prod',
         'user': 'postgres',
         'password': 'ddiMaster1!',
         'host': '127.0.0.1',
@@ -317,8 +317,8 @@ def insert_dummy_data(inputData):
         
         # 더미 데이터 삽입
         insert_query = """
-            INSERT INTO collection_data (name, file_name, file_path, method, collection_id,reg_time)
-            VALUES (%s, %s, %s, %s, %s,%s)
+            INSERT INTO "COLLECTION_DATA" ("NAME", "FILE_NAME", "FILE_PATH", "METHOD", "COLLECTION_ID")
+            VALUES (%s, %s, %s, %s, %s)
         """
         # dummy_data = [
         #     ('name1', 'file1', '/path/to/file1', 'AUTO', 78),
@@ -330,7 +330,7 @@ def insert_dummy_data(inputData):
         koreanTitle=inputData['KOSHA-GUIDE'][0]['data']['title']
         attachmentFileName=inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileName']
         attachmentFileUrl=inputData['KOSHA-GUIDE'][0]['data']['attachments']['fileUrl'].lstrip('\\')
-        datas.append((koreanTitle,attachmentFileName, attachmentFileUrl, 'AUTO', "106",timeNow))
+        datas.append((koreanTitle,attachmentFileName, attachmentFileUrl, 'AUTO', "106"))
         
         for data in datas:
             cursor.execute(insert_query, data)
